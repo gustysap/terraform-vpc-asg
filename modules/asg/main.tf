@@ -1,5 +1,5 @@
 resource"aws_launch_configuration" "launch-configuration" {
-  name_prefix = "${var.environment}-asg"
+  name_prefix = "${var.environment}-asg-"
   image_id = var.image_id
   instance_type = var.instance_type
   security_groups = var.security_groups_ids 
@@ -28,10 +28,10 @@ resource "aws_autoscaling_group" "autoscalling_group_config" {
 }
 
 
-resource "time_sleep" "wait_360_seconds" {
+resource "time_sleep" "wait_60_seconds" {
   depends_on = [aws_autoscaling_group.autoscalling_group_config]
 
-  create_duration = "360s"
+  create_duration = "60s"
 }
 
 
@@ -41,7 +41,7 @@ resource "aws_autoscaling_policy" "agents-scale-up" {
     adjustment_type = "ChangeInCapacity"
     cooldown = 300
     autoscaling_group_name = "${var.environment}-asg"
-    depends_on = [time_sleep.wait_360_seconds]
+    depends_on = [time_sleep.wait_60_seconds]
 }
 
 resource "aws_autoscaling_policy" "agents-scale-down" {
@@ -50,7 +50,7 @@ resource "aws_autoscaling_policy" "agents-scale-down" {
     adjustment_type = "ChangeInCapacity"
     cooldown = 300
     autoscaling_group_name = "${var.environment}-asg"
-    depends_on = [time_sleep.wait_360_seconds]
+    depends_on = [time_sleep.wait_60_seconds]
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu-high" {
@@ -63,7 +63,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu-high" {
     statistic = "Average"
     threshold = "45"
     alarm_description = "This metric monitors ec2 cpu for high utilization on agent hosts"
-    depends_on = [time_sleep.wait_360_seconds]
+    depends_on = [time_sleep.wait_60_seconds]
     alarm_actions = [
         "${aws_autoscaling_policy.agents-scale-up.arn}"
     ]
@@ -82,7 +82,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu-low" {
     statistic = "Average"
     threshold = "30"
     alarm_description = "This metric monitors ec2 cpu for low utilization on agent hosts"
-    depends_on = [time_sleep.wait_360_seconds]
+    depends_on = [time_sleep.wait_60_seconds]
     alarm_actions = [
         "${aws_autoscaling_policy.agents-scale-down.arn}"
     ]
